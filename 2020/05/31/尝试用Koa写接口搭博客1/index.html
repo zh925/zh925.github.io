@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="node,koa,sequelize,typescript," />
+  <meta name="keywords" content="node,koa,typescript,sequelize," />
 
 
 
@@ -81,17 +81,17 @@
 
 <meta name="description" content="为什么是Koa刚开始萌生写node的时候纠结了很久，在原生node、express、koa和eggjs中徘徊了很久（主要还是纠结express还是koa），通过翻查各种资料，自己总结出以下结论（可能有误）。 express已经是一个非常完整的框架了，相比于koa的轻量级，express有着完整的路由和模板等实现的方案。而koa主要还是轻量，模块化程度更高，在主要功能上，算是对express的一种扩">
 <meta property="og:type" content="article">
-<meta property="og:title" content="尝试用Koa写接口搭博 - 1">
+<meta property="og:title" content="尝试用Koa写接口搭博客 - 1">
 <meta property="og:url" content="http://blog.ruozhi.com/2020/05/31/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A21/index.html">
 <meta property="og:site_name" content="骑着母猪去买菜">
 <meta property="og:description" content="为什么是Koa刚开始萌生写node的时候纠结了很久，在原生node、express、koa和eggjs中徘徊了很久（主要还是纠结express还是koa），通过翻查各种资料，自己总结出以下结论（可能有误）。 express已经是一个非常完整的框架了，相比于koa的轻量级，express有着完整的路由和模板等实现的方案。而koa主要还是轻量，模块化程度更高，在主要功能上，算是对express的一种扩">
 <meta property="article:published_time" content="2020-05-31T14:19:25.000Z">
-<meta property="article:modified_time" content="2020-05-31T16:24:46.953Z">
-<meta property="article:author" content="zh925">
+<meta property="article:modified_time" content="2020-05-31T16:59:09.648Z">
+<meta property="article:author" content="小郑">
 <meta property="article:tag" content="node">
 <meta property="article:tag" content="koa">
-<meta property="article:tag" content="sequelize">
 <meta property="article:tag" content="typescript">
+<meta property="article:tag" content="sequelize">
 <meta name="twitter:card" content="summary">
 
 
@@ -128,7 +128,7 @@
 
 
 
-  <title>尝试用Koa写接口搭博 - 1 | 骑着母猪去买菜</title>
+  <title>尝试用Koa写接口搭博客 - 1 | 骑着母猪去买菜</title>
   
 
 
@@ -184,7 +184,7 @@
       
         
         <li class="menu-item menu-item-home">
-          <a href="/%20" rel="section">
+          <a href="/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
@@ -194,11 +194,21 @@
       
         
         <li class="menu-item menu-item-archives">
-          <a href="/archives/%20" rel="section">
+          <a href="/archives/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
             归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
           </a>
         </li>
       
@@ -238,9 +248,9 @@
     <link itemprop="mainEntityOfPage" href="http://blog.ruozhi.com/2020/05/31/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A21/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="zh925">
+      <meta itemprop="name" content="小郑">
       <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
@@ -252,7 +262,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">尝试用Koa写接口搭博 - 1</h1>
+          <h1 class="post-title" itemprop="name headline">尝试用Koa写接口搭博客 - 1</h1>
         
 
         <div class="post-meta">
@@ -274,6 +284,39 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/node/" itemprop="url" rel="index">
+                    <span itemprop="name">node</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/node/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A2/" itemprop="url" rel="index">
+                    <span itemprop="name">尝试用Koa写接口搭博客</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -353,9 +396,9 @@
           
             <a href="/tags/koa/" rel="tag"># koa</a>
           
-            <a href="/tags/sequelize/" rel="tag"># sequelize</a>
-          
             <a href="/tags/typescript/" rel="tag"># typescript</a>
+          
+            <a href="/tags/sequelize/" rel="tag"># sequelize</a>
           
         </div>
       
@@ -442,8 +485,12 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <p class="site-author-name" itemprop="name">zh925</p>
-              <p class="site-description motion-element" itemprop="description"></p>
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="小郑" />
+            
+              <p class="site-author-name" itemprop="name">小郑</p>
+              <p class="site-description motion-element" itemprop="description">永远的热泪盈眶</p>
           </div>
 
           <nav class="site-state motion-element">
@@ -451,7 +498,7 @@
             
               <div class="site-state-item site-state-posts">
               
-                <a href="/archives/%20%7C%7C%20archive">
+                <a href="/archives/%7C%7Carchive">
               
                   <span class="site-state-item-count">2</span>
                   <span class="site-state-item-name">日志</span>
@@ -459,6 +506,15 @@
               </div>
             
 
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
             
 
             
@@ -523,7 +579,7 @@
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">zh925</span>
+  <span class="author" itemprop="copyrightHolder">小郑</span>
 
   
 </div>
