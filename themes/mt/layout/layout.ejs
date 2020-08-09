@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8">
+</head>
+<body>
+
+这里是 layout.ejs
+
+<% include("index.ejs") %>
+
+<% include("post.ejs") %>
+
+<div class="post-list">
+    <% site.posts.forEach(function(post) { %>
+        <a href="<%= post.path %>" class="post-item"><%= post.title %></a>
+    <%}) %>
+</div>
+<%- body %>
+
+</body>
+</html>
