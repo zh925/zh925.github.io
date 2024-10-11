@@ -101,3 +101,14 @@ deploy:
   type: git
   repo: https://github.com/zh925/zh925.github.io.git
   branch: gh-pages
+
+feed:
+  enable: true
+  type: atom
+  path: atom.xml
+  limit: 20
+  hub:
+  content:
+  content_limit:
+  content_limit_delim:
+  icon: https://zh925.github.io/uploads/avatar.jpg
