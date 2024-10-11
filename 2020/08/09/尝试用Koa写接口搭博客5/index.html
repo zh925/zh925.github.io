@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.ruozhi.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="之前在开发的时候，一直觉得我的模型定义应该是有问题的，要不然就是sequelize对于typescript的支持有问题，在重新看了sequelize文档之后发现确实是我写的有问题，所以这个月主要是对模型的定义有了一些改动。然后中途还发现了一个WebComponent的UI库——shoelace，于是把页面上的某一些组件改用成shoelace，但是因为这个库现在还不够完善，完全替换可能还需要一些时间">
+<meta property="og:type" content="article">
+<meta property="og:title" content="尝试用Koa写接口搭博客（5）- 请求响应日志">
+<meta property="og:url" content="http://blog.ruozhi.com/2020/08/09/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A25/index.html">
+<meta property="og:site_name" content="Ruozhi&#39;s Blog">
+<meta property="og:description" content="之前在开发的时候，一直觉得我的模型定义应该是有问题的，要不然就是sequelize对于typescript的支持有问题，在重新看了sequelize文档之后发现确实是我写的有问题，所以这个月主要是对模型的定义有了一些改动。然后中途还发现了一个WebComponent的UI库——shoelace，于是把页面上的某一些组件改用成shoelace，但是因为这个库现在还不够完善，完全替换可能还需要一些时间">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-08-09T13:42:23.000Z">
+<meta property="article:modified_time" content="2024-10-11T06:53:30.617Z">
+<meta property="article:author" content="小郑">
+<meta property="article:tag" content="node">
+<meta property="article:tag" content="koa">
+<meta property="article:tag" content="sequelize">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://blog.ruozhi.com/2020/08/09/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A25/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>尝试用Koa写接口搭博客（5）- 请求响应日志 | Ruozhi's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Ruozhi's Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ruozhi's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">瞎写</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.ruozhi.com/2020/08/09/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A25/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="小郑">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ruozhi's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          尝试用Koa写接口搭博客（5）- 请求响应日志
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-09 21:42:23" itemprop="dateCreated datePublished" datetime="2020-08-09T21:42:23+08:00">2020-08-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-10-11 14:53:30" itemprop="dateModified" datetime="2024-10-11T14:53:30+08:00">2024-10-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/node/" itemprop="url" rel="index"><span itemprop="name">node</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/node/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A2/" itemprop="url" rel="index"><span itemprop="name">尝试用Koa写接口搭博客</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>之前在开发的时候，一直觉得我的模型定义应该是有问题的，要不然就是sequelize对于typescript的支持有问题，在重新看了sequelize文档之后发现确实是我写的有问题，所以这个月主要是对模型的定义有了一些改动。然后中途还发现了一个WebComponent的UI库——<a target="_blank" rel="noopener" href="https://shoelace.style/">shoelace</a>，于是把页面上的某一些组件改用成shoelace，但是因为这个库现在还不够完善，完全替换可能还需要一些时间，所以页面上的开发就暂时停滞了。然后就是从开始到现在一直心心念念的日志了，这一章最主要的内容就是请求响应的日志记录。</p>
+<span id="more"></span>
+
+<h2 id="日志库-——-log4js-node"><a href="#日志库-——-log4js-node" class="headerlink" title="日志库 —— log4js-node"></a>日志库 —— log4js-node</h2><p>在百度搜了一圈之后发现现在大部分人推荐的都是用的这个<a target="_blank" rel="noopener" href="https://github.com/log4js-node/log4js-node">log4js-node</a>，于是只看了一遍文档和示例的我就开始了。先安装</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cnpm i log4js-node -S</span><br></pre></td></tr></table></figure>
+
+<p>安装之后，增加配置项，我把之前的配置文件给改了一下，可以到<a target="_blank" rel="noopener" href="https://github.com/zh925/ruozhi-blog">项目地址</a>查看最新的文件。关于log4js-node的配置项如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/config/log.ts</span></span><br><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Configuration</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;log4js&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> path <span class="keyword">from</span> <span class="string">&#x27;path&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="attr">config</span>: <span class="title class_">Configuration</span> = &#123;</span><br><span class="line">    <span class="attr">appenders</span>: &#123;</span><br><span class="line">        <span class="attr">console</span>: &#123;</span><br><span class="line">            <span class="attr">type</span>: <span class="string">&#x27;console&#x27;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">response</span>: &#123;</span><br><span class="line">            <span class="attr">type</span>: <span class="string">&#x27;dateFile&#x27;</span>,</span><br><span class="line">            <span class="attr">filename</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;../../log/response/response&#x27;</span>),</span><br><span class="line">            <span class="attr">pattern</span>: <span class="string">&#x27;yyyy-MM-dd.log&#x27;</span>,</span><br><span class="line">            <span class="attr">alwaysIncludePattern</span>: <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">encoding</span>: <span class="string">&#x27;utf-8&#x27;</span>,</span><br><span class="line">            <span class="attr">maxLogSize</span>: <span class="number">1000</span>,</span><br><span class="line">            <span class="attr">numBackups</span>: <span class="number">3</span>,</span><br><span class="line">            <span class="attr">path</span>: (<span class="string">&#x27;../log/app&#x27;</span>),</span><br><span class="line">            <span class="attr">layout</span>: &#123;</span><br><span class="line">              <span class="attr">type</span>: <span class="string">&#x27;basic&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">errorFiles</span>: &#123;</span><br><span class="line">            <span class="attr">type</span>: <span class="string">&#x27;dateFile&#x27;</span>,</span><br><span class="line">            <span class="attr">filename</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;../../log/error/error&#x27;</span>),</span><br><span class="line">            <span class="attr">pattern</span>: <span class="string">&#x27;yyyy-MM-dd.log&#x27;</span>,</span><br><span class="line">            <span class="attr">alwaysIncludePattern</span>: <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">encoding</span>: <span class="string">&#x27;utf-8&#x27;</span>,</span><br><span class="line">            <span class="attr">maxLogSize</span>: <span class="number">1000</span>,</span><br><span class="line">            <span class="attr">numBackups</span>: <span class="number">3</span>,</span><br><span class="line">            <span class="attr">path</span>: (<span class="string">&#x27;../log/error&#x27;</span>),</span><br><span class="line">            <span class="attr">layout</span>: &#123;</span><br><span class="line">              <span class="attr">type</span>: <span class="string">&#x27;basic&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">categories</span>: &#123;</span><br><span class="line">        <span class="attr">default</span>: &#123; <span class="attr">appenders</span>: [ <span class="string">&#x27;console&#x27;</span>, <span class="string">&#x27;response&#x27;</span> ], <span class="attr">level</span>: <span class="string">&#x27;all&#x27;</span> &#125;,</span><br><span class="line">        <span class="attr">error</span>: &#123; <span class="attr">appenders</span>: [<span class="string">&#x27;errorFiles&#x27;</span>, <span class="string">&#x27;console&#x27;</span>], <span class="attr">level</span>: <span class="string">&#x27;error&#x27;</span> &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> config</span><br></pre></td></tr></table></figure>
+
+<p>这里的配置项主要是参照官方给的示例修改的。这里的appenders可以看作是配置每一个日志记录的地点，categories就是配置每一个日志记录的类型。</p>
+<p>categories的配置规则是，当调用该类对应配置的level（包含all, info, error, debug, trace, warn, fatal, mark等）时，把日志记录到对应配置的appenders内，而这里的appenders既是配置的appenders的每一项。</p>
+<h2 id="封装记录日志的中间件"><a href="#封装记录日志的中间件" class="headerlink" title="封装记录日志的中间件"></a>封装记录日志的中间件</h2><p>在src/middlewares中新建log4js.ts文件，这个中间件主要是用来处理请求和响应的日志的。代码如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> log4js <span class="keyword">from</span> <span class="string">&#x27;log4js&#x27;</span></span><br><span class="line"><span class="keyword">import</span> config <span class="keyword">from</span> <span class="string">&#x27;../config&#x27;</span></span><br><span class="line"></span><br><span class="line">log4js.<span class="title function_">configure</span>(config.<span class="property">log</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> logger = log4js.<span class="title function_">getLogger</span>()</span><br><span class="line"><span class="keyword">const</span> errorLogger = log4js.<span class="title function_">getLogger</span>(<span class="string">&#x27;error&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">async</span>(ctx, next) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> startTime = <span class="keyword">new</span> <span class="title class_">Date</span>();</span><br><span class="line">    <span class="keyword">await</span> <span class="title function_">next</span>();</span><br><span class="line">    <span class="keyword">const</span> duration = <span class="keyword">new</span> <span class="title class_">Date</span>().<span class="title function_">getTime</span>() - startTime.<span class="title function_">getTime</span>();</span><br><span class="line">    <span class="keyword">const</span> &#123; request, body &#125; = ctx;</span><br><span class="line">    <span class="keyword">const</span> logHeader = <span class="string">`\n==================== Request Start ====================\n`</span>;</span><br><span class="line">    <span class="keyword">const</span> logFooter = <span class="string">`\n===================== Request End =====================\n`</span>;</span><br><span class="line">    <span class="keyword">const</span> logMsg = </span><br><span class="line">    <span class="string">`<span class="subst">$&#123;logHeader&#125;</span></span></span><br><span class="line"><span class="string">    Client IP:       <span class="subst">$&#123;ctx.ip&#125;</span></span></span><br><span class="line"><span class="string">    Request:         <span class="subst">$&#123;request.method&#125;</span> <span class="subst">$&#123;request.url&#125;</span></span></span><br><span class="line"><span class="string">    ResponseTime:    <span class="subst">$&#123;duration&#125;</span></span></span><br><span class="line"><span class="string">    Response Status: <span class="subst">$&#123;ctx.status&#125;</span></span></span><br><span class="line"><span class="string">    Request Header:  <span class="subst">$&#123;<span class="built_in">JSON</span>.stringify(request.header)&#125;</span></span></span><br><span class="line"><span class="string">    Request Body:    <span class="subst">$&#123;request.method === <span class="string">&#x27;GET&#x27;</span> ? <span class="built_in">JSON</span>.stringify(ctx.params) : <span class="built_in">JSON</span>.stringify(request.body)&#125;</span></span></span><br><span class="line"><span class="string">    Response Body:   <span class="subst">$&#123;<span class="built_in">JSON</span>.stringify(body)&#125;</span></span></span><br><span class="line"><span class="string">    <span class="subst">$&#123;logFooter&#125;</span>`</span></span><br><span class="line">    <span class="keyword">if</span> (ctx.<span class="property">status</span> === <span class="number">200</span> &amp;&amp; body.<span class="property">code</span> === <span class="number">200</span>) &#123;</span><br><span class="line">        logger.<span class="title function_">info</span>(logMsg);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        errorLogger.<span class="title function_">error</span>(logMsg);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在app中引入：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app.ts</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> <span class="title class_">Koa</span> <span class="keyword">from</span> <span class="string">&#x27;koa&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> bodyParser <span class="keyword">from</span> <span class="string">&#x27;koa-bodyparser&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> render <span class="keyword">from</span> <span class="string">&#x27;koa-ejs&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> serve <span class="keyword">from</span> <span class="string">&#x27;koa-static&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> path <span class="keyword">from</span> <span class="string">&#x27;path&#x27;</span></span><br><span class="line"><span class="keyword">import</span> logger <span class="keyword">from</span> <span class="string">&#x27;./middleware/log4js&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> router <span class="keyword">from</span> <span class="string">&#x27;./router&#x27;</span></span><br><span class="line"><span class="keyword">import</span> errorHandler <span class="keyword">from</span> <span class="string">&#x27;./middleware/errorHandler&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = <span class="keyword">new</span> <span class="title class_">Koa</span>()</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">use</span>(<span class="title function_">serve</span>(path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;static&#x27;</span>)))</span><br><span class="line"><span class="title function_">render</span>(app, &#123;</span><br><span class="line">    <span class="attr">root</span>: path.<span class="title function_">join</span>(__dirname, <span class="string">&#x27;views&#x27;</span>),</span><br><span class="line">    <span class="attr">layout</span>: <span class="string">&#x27;layout&#x27;</span>,</span><br><span class="line">    <span class="attr">viewExt</span>: <span class="string">&#x27;ejs&#x27;</span>,</span><br><span class="line">    <span class="attr">cache</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">debug</span>: <span class="literal">true</span></span><br><span class="line">&#125;)</span><br><span class="line">app.<span class="title function_">use</span>(<span class="title function_">bodyParser</span>())</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">use</span>(<span class="title function_">async</span> (ctx, next) =&gt; &#123;</span><br><span class="line">    ctx.<span class="property">state</span> = ctx.<span class="property">state</span> || &#123;&#125;</span><br><span class="line">    ctx.<span class="property">state</span>.<span class="property">now</span> = <span class="keyword">new</span> <span class="title class_">Date</span>()</span><br><span class="line">    ctx.<span class="property">state</span>.<span class="property">ip</span> = ctx.<span class="property">ip</span></span><br><span class="line">    ctx.<span class="property">state</span>.<span class="property">render</span> = &#123;</span><br><span class="line">        <span class="attr">header</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">footer</span>: <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_">next</span>()</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.<span class="title function_">use</span>(logger)</span><br><span class="line">app.<span class="title function_">use</span>(errorHandler)</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">use</span>(router.<span class="title function_">routes</span>())</span><br><span class="line">    .<span class="title function_">use</span>(router.<span class="title function_">allowedMethods</span>())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.<span class="title function_">listen</span>(<span class="number">3000</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;app started at port 3000...&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这样就把日志模块给搞定了，整个项目的基础架子也算是真正意义上的完成了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/node/" rel="tag"># node</a>
+              <a href="/tags/koa/" rel="tag"># koa</a>
+              <a href="/tags/sequelize/" rel="tag"># sequelize</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/11/%E5%B0%9D%E8%AF%95%E7%94%A8Koa%E5%86%99%E6%8E%A5%E5%8F%A3%E6%90%AD%E5%8D%9A%E5%AE%A24/" rel="prev" title="尝试用Koa写接口搭博客（4）- 登录注册页面">
+      <i class="fa fa-chevron-left"></i> 尝试用Koa写接口搭博客（4）- 登录注册页面
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/05/Event-Loop/" rel="next" title="JavaScript的并发模型，事件循环，微任务及运行时">
+      JavaScript的并发模型，事件循环，微任务及运行时 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E5%BA%93-%E2%80%94%E2%80%94-log4js-node"><span class="nav-number">1.</span> <span class="nav-text">日志库 —— log4js-node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E8%AE%B0%E5%BD%95%E6%97%A5%E5%BF%97%E7%9A%84%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">封装记录日志的中间件</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="小郑"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">小郑</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zh925" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zh925" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zh-925@foxmail.com" title="E-Mail → mailto:zh-925@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">小郑</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
