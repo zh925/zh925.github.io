@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<description>feedId:67465024896849920+userId:63945467060118528</description>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>{{ config.title }}</title>
+  <description>feedId:67465024896849920+userId:63945467060118528</description>
   {% if icon %}<icon>{{ icon }}</icon>{% endif %}
   {% if config.subtitle %}<subtitle>{{ config.subtitle }}</subtitle>{% endif %}
   <link href="{{ feed_url | uriencode }}" rel="self"/>
